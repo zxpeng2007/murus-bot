@@ -1,13 +1,13 @@
-"""HTTP client for the Palisade API.
+"""HTTP client for the Murus API.
 
 One thin wrapper per endpoint plus the two ndjson streams, exactly as
-documented in API.md (https://github.com/zxpeng2007/palisade/blob/main/API.md).
-Nothing here knows the rules of the game; see :mod:`palisade_bot.rules` for
-those and :mod:`palisade_bot.runner` for the loop that ties them together.
+documented in API.md (https://github.com/zxpeng2007/murus/blob/main/API.md).
+Nothing here knows the rules of the game; see :mod:`murus_bot.rules` for
+those and :mod:`murus_bot.runner` for the loop that ties them together.
 
-    from palisade_bot.client import PalisadeClient
+    from murus_bot.client import MurusClient
 
-    with PalisadeClient(token="pal_...") as client:
+    with MurusClient(token="mur_...") as client:
         print(client.account())
 """
 
@@ -30,7 +30,7 @@ STREAM_IDLE_TIMEOUT = 60.0
 log = logging.getLogger(__name__)
 
 
-class PalisadeError(RuntimeError):
+class MurusError(RuntimeError):
     """An error response from the server. ``status`` is the HTTP status code."""
 
     def __init__(self, status: int, message: str):
@@ -50,11 +50,11 @@ def _reason(response: httpx.Response) -> str:
     return response.text.strip()
 
 
-class PalisadeClient:
-    """Authenticated access to one Palisade server.
+class MurusClient:
+    """Authenticated access to one Murus server.
 
     Args:
-        token: an API token (``pal_...``) with at least the ``play`` scope.
+        token: an API token (``mur_...``) with at least the ``play`` scope.
         server: base URL. Defaults to the public arena at murus.net.
         timeout: seconds for ordinary requests. Streams use their own.
     """
@@ -73,7 +73,7 @@ class PalisadeClient:
     def close(self) -> None:
         self._http.close()
 
-    def __enter__(self) -> "PalisadeClient":
+    def __enter__(self) -> "MurusClient":
         return self
 
     def __exit__(self, *exc: object) -> None:
@@ -84,7 +84,7 @@ class PalisadeClient:
     def _request(self, method: str, path: str, **kwargs) -> dict:
         response = self._http.request(method, path, **kwargs)
         if response.status_code >= 400:
-            raise PalisadeError(response.status_code, _reason(response))
+            raise MurusError(response.status_code, _reason(response))
         if not response.content:
             return {}
         return response.json()
@@ -147,7 +147,7 @@ class PalisadeClient:
         return self.get(f"/api/game/{game_id}")
 
     def play(self, game_id: str, token: str) -> dict:
-        """Submit a move. Raises :class:`PalisadeError` if the server refuses."""
+        """Submit a move. Raises :class:`MurusError` if the server refuses."""
         return self.post(f"/api/game/{game_id}/move/{token}")
 
     def resign(self, game_id: str) -> dict:
@@ -164,7 +164,7 @@ class PalisadeClient:
 
         ``on_connect`` fires once the server has accepted the request, before
         the first line. Ends when the server closes the stream; raises
-        :class:`PalisadeError` on a refusal and ``httpx.HTTPError`` if the
+        :class:`MurusError` on a refusal and ``httpx.HTTPError`` if the
         connection breaks.
 
         The server's blank keepalive lines surface as ``{"type": "keepalive"}``
@@ -175,7 +175,7 @@ class PalisadeClient:
         with self._http.stream("GET", path, timeout=timeout) as response:
             if response.status_code >= 400:
                 response.read()
-                raise PalisadeError(response.status_code, _reason(response))
+                raise MurusError(response.status_code, _reason(response))
             if on_connect is not None:
                 on_connect()
             for line in response.iter_lines():
@@ -188,7 +188,7 @@ class PalisadeClient:
 
         A stream can end without warning — the server may sever a slow consumer
         — so an unexpected close is not an error, it is a reconnect. Both
-        Palisade streams resend everything needed to resync on the first line
+        Murus streams resend everything needed to resync on the first line
         after reconnecting, so no state is lost.
 
         4xx responses are raised instead: a rejected token or a game id that
@@ -201,7 +201,7 @@ class PalisadeClient:
                     delay = first_delay
                     yield message
                 log.info("stream %s closed by the server; reconnecting", path)
-            except PalisadeError as exc:
+            except MurusError as exc:
                 if exc.status < 500:
                     raise
                 log.warning("stream %s failed: %s", path, exc)

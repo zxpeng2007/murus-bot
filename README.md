@@ -1,9 +1,9 @@
-# palisade-bot
+# murus-bot
 
 Write an engine for the wall game and put it on the ladder at
 [murus.net](https://murus.net).
 
-Palisade is a lichess-style arena for the wall game — a 9×9 board, two pawns
+Murus is a lichess-style arena for the wall game — a 9×9 board, two pawns
 racing to the opposite rank, twenty walls in the way. People play in the
 browser, engines play through the HTTP API, and both share one rating list.
 This repository is the client side: everything you need to connect an engine,
@@ -16,17 +16,17 @@ Three pieces, useful separately.
 
 | module | what it does |
 |---|---|
-| `palisade_bot.rules` | the game itself, in plain Python: legal moves, positions, notation, shortest paths. No dependencies. |
-| `palisade_bot.client` | one method per API endpoint, plus the two ndjson streams. |
-| `palisade_bot.runner` | the play loop: challenges, seeks, reconnects, the clock. You supply one function. |
+| `murus_bot.rules` | the game itself, in plain Python: legal moves, positions, notation, shortest paths. No dependencies. |
+| `murus_bot.client` | one method per API endpoint, plus the two ndjson streams. |
+| `murus_bot.runner` | the play loop: challenges, seeks, reconnects, the clock. You supply one function. |
 
 The only dependency is [httpx](https://www.python-httpx.org/). Python 3.11+.
 
 ## Install
 
 ```sh
-git clone https://github.com/zxpeng2007/palisade-bot
-cd palisade-bot
+git clone https://github.com/zxpeng2007/murus-bot
+cd murus-bot
 pip install -e .
 ```
 
@@ -49,7 +49,7 @@ curl -b jar.txt -X POST https://murus.net/api/bot/upgrade
 curl -b jar.txt -H 'Content-Type: application/json' \
      -d '{"name":"my-engine","scopes":["play","bot"]}' \
      https://murus.net/api/token
-# -> {"token":"pal_..."}
+# -> {"token":"mur_..."}
 
 rm jar.txt
 ```
@@ -60,7 +60,7 @@ more of them later.
 ## Play a game
 
 ```sh
-export PALISADE_TOKEN=pal_...
+export MURUS_TOKEN=mur_...
 python examples/random_bot.py --seek 300+3 --games 1
 ```
 
@@ -69,7 +69,7 @@ Challenge it from the site, or start a second bot with the same time control
 in another terminal and let the two of them find each other:
 
 ```sh
-PALISADE_TOKEN=pal_other python examples/greedy_bot.py --seek 300+3 --games 1
+MURUS_TOKEN=mur_other python examples/greedy_bot.py --seek 300+3 --games 1
 ```
 
 Both examples take `--server` (default `https://murus.net`), `--accept`
@@ -83,7 +83,7 @@ it returns a move token.
 
 ```python
 import os
-from palisade_bot import BotRunner, PalisadeClient, parse_seek, rules
+from murus_bot import BotRunner, MurusClient, parse_seek, rules
 
 
 def choose(state, seat, clock):
@@ -98,7 +98,7 @@ def choose(state, seat, clock):
     return min(steps, key=lambda t: distance[rules.parse_square(t)])
 
 
-with PalisadeClient(os.environ["PALISADE_TOKEN"]) as client:
+with MurusClient(os.environ["MURUS_TOKEN"]) as client:
     BotRunner(client, choose, seeks=[parse_seek("300+3")]).run()
 ```
 
@@ -178,7 +178,7 @@ off, steps diagonally past them instead, to either side that is open. First
 pawn to the far rank wins. There are no draws.
 
 The API and the full specification live in
-[API.md](https://github.com/zxpeng2007/palisade/blob/main/API.md). Where this
+[API.md](https://github.com/zxpeng2007/murus/blob/main/API.md). Where this
 library and that document disagree, the document is right.
 
 ## Fair play
@@ -210,7 +210,7 @@ recorded result. It also contains a differential test that plays two thousand
 random games against the private engine behind the house bot, comparing every
 position and every legal move set; that one skips itself when the engine is not
 installed, which for everyone but the maintainers is always. Set
-`PALISADE_BOT_DIFF_GAMES` to change how many games it plays.
+`MURUS_BOT_DIFF_GAMES` to change how many games it plays.
 
 ## Licence
 

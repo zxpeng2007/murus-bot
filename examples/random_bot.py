@@ -1,10 +1,10 @@
-"""The smallest complete Palisade bot: it plays a legal move, chosen at random.
+"""The smallest complete Murus bot: it plays a legal move, chosen at random.
 
 Useless as an opponent, but it exercises every part of the loop, so it is the
 right thing to run first when you are checking a token, a server address, or a
 firewall.
 
-    export PALISADE_TOKEN=pal_...
+    export MURUS_TOKEN=mur_...
     python examples/random_bot.py --seek 300+3 --games 1
 
 Requires only httpx. See greedy_bot.py for something that tries to win.
@@ -18,7 +18,7 @@ import os
 import random
 import sys
 
-from palisade_bot import BotRunner, PalisadeClient, PalisadeError, parse_seek, rules
+from murus_bot import BotRunner, MurusClient, MurusError, parse_seek, rules
 
 
 class RandomBot:
@@ -38,9 +38,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--server", default="https://murus.net",
                         help="server base URL (default %(default)s)")
-    parser.add_argument("--token", default=os.environ.get("PALISADE_TOKEN"),
+    parser.add_argument("--token", default=os.environ.get("MURUS_TOKEN"),
                         help="API token with the play scope "
-                             "(default: $PALISADE_TOKEN)")
+                             "(default: $MURUS_TOKEN)")
     parser.add_argument("--seek", action="append", default=[], metavar="300+3",
                         help="keep a seek with this time control open while "
                              "idle; suffix :casual for unrated; repeat to "
@@ -59,10 +59,10 @@ def main(argv: list[str] | None = None) -> int:
     # httpx logs a line per request, which at a move a second is just noise.
     logging.getLogger("httpx").setLevel(logging.WARNING)
     if not args.token:
-        parser.error("no API token: pass --token or set PALISADE_TOKEN")
+        parser.error("no API token: pass --token or set MURUS_TOKEN")
 
     bot = RandomBot(args.seed)
-    with PalisadeClient(args.token, server=args.server) as client:
+    with MurusClient(args.token, server=args.server) as client:
         runner = BotRunner(client, bot.choose, accept=args.accept,
                            seeks=[parse_seek(s) for s in args.seek],
                            max_games=args.games)
@@ -70,7 +70,7 @@ def main(argv: list[str] | None = None) -> int:
             runner.run()
         except KeyboardInterrupt:
             logging.info("stopping")
-        except PalisadeError as exc:
+        except MurusError as exc:
             logging.error("%s", exc)
             return 1
     return 0

@@ -3,14 +3,14 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "palisade-bot"
+name = "murus-bot"
 version = "0.1.0"
-description = "Write an engine for the wall game and put it on the Palisade ladder: rules, API client and play loop."
+description = "Write an engine for the wall game and put it on the Murus ladder: rules, API client and play loop."
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "zxpeng2007" }]
 requires-python = ">=3.11"
-keywords = ["quoridor", "palisade", "board-game", "bot", "game-ai"]
+keywords = ["quoridor", "murus", "board-game", "bot", "game-ai"]
 dependencies = [
     "httpx>=0.27",
 ]
@@ -27,11 +27,11 @@ dev = ["pytest>=8"]
 
 [project.urls]
 Homepage = "https://murus.net"
-Source = "https://github.com/zxpeng2007/palisade-bot"
+Source = "https://github.com/zxpeng2007/murus-bot"
 "Fair play" = "https://murus.net/#/fairplay"
 
 [tool.setuptools.packages.find]
-include = ["palisade_bot*"]
+include = ["murus_bot*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

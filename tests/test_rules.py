@@ -14,7 +14,7 @@ import random
 
 import pytest
 
-from palisade_bot import rules
+from murus_bot import rules
 
 
 def tokens_of(*record: str) -> list[str]:
@@ -234,7 +234,7 @@ def test_a_real_game_replays_to_its_recorded_result():
 
 # ---------------------------------------------------- differential testing
 
-DIFF_GAMES = int(os.environ.get("PALISADE_BOT_DIFF_GAMES", "2000"))
+DIFF_GAMES = int(os.environ.get("MURUS_BOT_DIFF_GAMES", "2000"))
 DIFF_PLY_CAP = 400
 # Random play is mostly wall placement -- 128 wall actions against a handful of
 # pawn moves -- which spends the walls in the first few plies and then wanders

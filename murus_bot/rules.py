@@ -1,4 +1,4 @@
-"""The rules of the wall game and the move notation Palisade speaks.
+"""The rules of the wall game and the move notation Murus speaks.
 
 Self-contained and dependency-free: this module is the only thing a bot needs
 in order to know what its legal moves are and what the board looks like after
@@ -6,7 +6,7 @@ each of them. It is written for clarity, because an engine makes one move at a
 time and a few hundred microseconds either way are irrelevant next to the
 thinking that follows.
 
-The spec is API.md at https://github.com/zxpeng2007/palisade. In summary:
+The spec is API.md at https://github.com/zxpeng2007/murus. In summary:
 
 * A 9x9 board. Files ``a``-``i`` run left to right, ranks ``1``-``9`` bottom to
   top, from Player 1's point of view.

@@ -8,7 +8,7 @@ position bookkeeping. Your engine is one callback::
 
     BotRunner(client, choose, seeks=[parse_seek("300+3")]).run()
 
-``state`` is a :class:`palisade_bot.rules.State` rebuilt by replaying the
+``state`` is a :class:`murus_bot.rules.State` rebuilt by replaying the
 server's move list, ``seat`` is 0 for Player 1 and 1 for Player 2, and
 ``clock`` is a :class:`Clock` with both remaining times and a budget helper.
 Return a move token, or None if you have nothing to play.
@@ -30,8 +30,8 @@ from typing import Callable, Sequence
 
 import httpx
 
-from palisade_bot import rules
-from palisade_bot.client import PalisadeClient, PalisadeError
+from murus_bot import rules
+from murus_bot.client import MurusClient, MurusError
 
 log = logging.getLogger(__name__)
 
@@ -93,10 +93,10 @@ class Clock:
 
 
 class BotRunner:
-    """Connects a ``choose`` callback to a Palisade server.
+    """Connects a ``choose`` callback to a Murus server.
 
     Args:
-        client: an authenticated :class:`~palisade_bot.client.PalisadeClient`.
+        client: an authenticated :class:`~murus_bot.client.MurusClient`.
         choose: your engine, called when it is your turn.
         accept: challenge policy — ``all``, ``rated``, ``casual`` or ``none``.
         seeks: time controls to rotate through while idle. Empty means the bot
@@ -110,7 +110,7 @@ class BotRunner:
 
     ACCEPT_POLICIES = ("all", "rated", "casual", "none")
 
-    def __init__(self, client: PalisadeClient, choose: Choose, *,
+    def __init__(self, client: MurusClient, choose: Choose, *,
                  accept: str = "all", seeks: Sequence[Seek] = (),
                  max_games: int | None = None, resign_on_error: bool = True):
         if accept not in self.ACCEPT_POLICIES:
@@ -222,7 +222,7 @@ class BotRunner:
                 self.client.accept_challenge(challenge["id"])
             else:
                 self.client.decline_challenge(challenge["id"])
-        except (PalisadeError, httpx.HTTPError) as exc:
+        except (MurusError, httpx.HTTPError) as exc:
             # Usually the challenger withdrew in the meantime.
             log.info("could not %s challenge %s: %s", action, challenge["id"], exc)
 
@@ -234,7 +234,7 @@ class BotRunner:
         try:
             reply = self.client.seek(initial=seek.initial,
                                      increment=seek.increment, rated=seek.rated)
-        except (PalisadeError, httpx.HTTPError) as exc:
+        except (MurusError, httpx.HTTPError) as exc:
             log.warning("seek %s failed: %s", seek, exc)
             return
         if reply.get("matched"):
@@ -249,7 +249,7 @@ class BotRunner:
         self._seek_open = False
         try:
             self.client.cancel_seek()
-        except (PalisadeError, httpx.HTTPError):
+        except (MurusError, httpx.HTTPError):
             pass
 
     # -- playing ------------------------------------------------------------
@@ -288,7 +288,7 @@ class BotRunner:
                     return
                 answered = self._consider_move(game_id, seat, state, control,
                                                answered)
-        except PalisadeError as exc:
+        except MurusError as exc:
             log.error("game %s: stream refused (%s)", game_id, exc)
         finally:
             self.games_played += 1
@@ -347,7 +347,7 @@ class BotRunner:
             try:
                 self.client.play(game_id, token)
                 return True
-            except PalisadeError as exc:
+            except MurusError as exc:
                 if exc.status == 429:    # rate limited: the only case worth retrying
                     time.sleep(1.0 + attempt)
                     continue
@@ -368,5 +368,5 @@ class BotRunner:
         log.error("game %s: resigning", game_id)
         try:
             self.client.resign(game_id)
-        except (PalisadeError, httpx.HTTPError) as exc:
+        except (MurusError, httpx.HTTPError) as exc:
             log.error("game %s: resignation failed: %s", game_id, exc)

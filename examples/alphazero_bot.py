@@ -1,6 +1,6 @@
 """Drive an AlphaZero engine, for people who have one.
 
-This example needs two things that are NOT part of palisade-bot and are not
+This example needs two things that are NOT part of murus-bot and are not
 distributed with it:
 
   * the ``quoridor`` engine package — the private AlphaZero implementation
@@ -14,7 +14,7 @@ for hanging *any* search engine off the runner. Swap the three engine calls —
 load, encode, search — for your own and the rest is unchanged. random_bot.py
 and greedy_bot.py run with nothing but httpx.
 
-    export PALISADE_TOKEN=pal_...
+    export MURUS_TOKEN=mur_...
     python examples/alphazero_bot.py --checkpoint best.pt --seek 300+3
 
 The search time per move comes from the clock: the runner hands over a budget
@@ -34,7 +34,7 @@ import sys
 import time
 from pathlib import Path
 
-from palisade_bot import BotRunner, PalisadeClient, PalisadeError, parse_seek, rules
+from murus_bot import BotRunner, MurusClient, MurusError, parse_seek, rules
 
 log = logging.getLogger("alphazero_bot")
 
@@ -159,7 +159,7 @@ class AlphaZeroBot:
     # -- engine <-> rules ---------------------------------------------------
 
     def _encode(self, state: rules.State):
-        """A :class:`palisade_bot.rules.State` as the engine's state array."""
+        """A :class:`murus_bot.rules.State` as the engine's state array."""
         fr = self.fr
         encoded = self.np.zeros(fr.STATE_SIZE, dtype=self.np.uint8)
         for slot in state.walls_h:
@@ -189,9 +189,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--server", default="https://murus.net",
                         help="server base URL (default %(default)s)")
-    parser.add_argument("--token", default=os.environ.get("PALISADE_TOKEN"),
+    parser.add_argument("--token", default=os.environ.get("MURUS_TOKEN"),
                         help="API token with the play scope "
-                             "(default: $PALISADE_TOKEN)")
+                             "(default: $MURUS_TOKEN)")
     parser.add_argument("--checkpoint", required=True,
                         help="torch checkpoint for the network (not supplied "
                              "with this repository)")
@@ -218,7 +218,7 @@ def main(argv: list[str] | None = None) -> int:
     # httpx logs a line per request, which at a move a second is just noise.
     logging.getLogger("httpx").setLevel(logging.WARNING)
     if not args.token:
-        parser.error("no API token: pass --token or set PALISADE_TOKEN")
+        parser.error("no API token: pass --token or set MURUS_TOKEN")
 
     log.info("loading engine...")
     bot = AlphaZeroBot(args.checkpoint, device=args.device, think=args.think,
@@ -226,7 +226,7 @@ def main(argv: list[str] | None = None) -> int:
     log.info("engine ready on %s: %s, %.0f sims/s", bot.device,
              bot.meta.get("checkpoint", args.checkpoint), bot.rate)
 
-    with PalisadeClient(args.token, server=args.server) as client:
+    with MurusClient(args.token, server=args.server) as client:
         runner = BotRunner(client, bot.choose, accept=args.accept,
                            seeks=[parse_seek(s) for s in args.seek],
                            max_games=args.games)
@@ -234,7 +234,7 @@ def main(argv: list[str] | None = None) -> int:
             runner.run()
         except KeyboardInterrupt:
             log.info("stopping")
-        except PalisadeError as exc:
+        except MurusError as exc:
             log.error("%s", exc)
             return 1
     return 0
