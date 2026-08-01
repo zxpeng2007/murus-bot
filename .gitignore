@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+.venv/
+venv/
+
+# Model checkpoints: yours to keep, not to commit here.
+*.pt
+*.pth
+*.ckpt
+
+# Local secrets. The API token belongs in the environment, never in the repo.
+.env
+
+# Claude working files
+CLAUDE.md
+**/CLAUDE.md
+.claude/
